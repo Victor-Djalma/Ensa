@@ -595,7 +595,7 @@
 
   <script>
     // Configuration
-    const API_BASE_URL = 'http://192.168.15.13:5000';
+    const API_BASE_URL = 'http://192.168.15.13:5000';   //IP DA API-SERVER
     
     // Tab functionality
     function initTabs() {
@@ -796,7 +796,7 @@
       // Test API connection on page load
       testAPIConnection().then(connected => {
         if (!connected) {
-          showStatusMessage('Não foi possível conectar ao servidor de análise. Verifique se o backend está rodando em 192.168.15.13:5000', 'error');
+          showStatusMessage('Não foi possível conectar ao servidor de análise. Verifique se o backend está rodando em 192.168.15.13:5000', 'error');  //IP DA API SERVER
         }
       });
 
