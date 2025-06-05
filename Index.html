@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENSA - Análise de Vulnerabilidade de Rede</title>
+  <link rel="icon" href="Img/Transferir(1).png" type="image/png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #0f172a, #1e293b);
+      color: #f1f5f9;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #475569;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      height: 4rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      background: #10b981;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    /* Main Content */
+    .main {
+      padding: 2rem 0;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-top: 2rem;
+    }
+
+    .hero-icon {
+      display: inline-flex;
+      padding: 1rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .hero-description {
+      font-size: 1.125rem;
+      color: #cbd5e1;
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (min-width: 768px) {
+      .card-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      background: rgba(30, 41, 59, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: #cbd5e1;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-emerald {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .icon-blue {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .icon-purple {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .card-description {
+      font-size: 0.875rem;
+      color: #cbd5e1;
+    }
+
+    /* Configuration Section */
+    .config-section {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-description {
+      color: #cbd5e1;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      background: #475569;
+      padding: 0.25rem;
+      border-radius: 0.375rem;
+    }
+
+    .tab-trigger {
+      padding: 0.75rem;
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-weight: 500;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-trigger.active {
+      background: #10b981;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      padding-top: 1.5rem;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+
+    .form-input,
+    .form-select {
+      padding: 0.75rem;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 0.375rem;
+      color: #f1f5f9;
+    }
+
+    .form-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Switch */
+    .switch-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+    }
+
+    .switch-label {
+      color: #e2e8f0;
+    }
+
+    .switch {
+      position: relative;
+      width: 2.5rem;
+      height: 1.25rem;
+      background: #475569;
+      border-radius: 0.625rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .switch.active {
+      background: #10b981;
+    }
+
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 0.125rem;
+      left: 0.125rem;
+      width: 1rem;
+      height: 1rem;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .switch.active::after {
+      transform: translateX(1.25rem);
+    }
+
+    /* Form Footer */
+    .form-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid #475569;
+    }
+
+    .time-estimate {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #cbd5e1;
+      font-size: 0.875rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: white;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: #059669;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Status Messages */
+    .status-message {
+      padding: 0.75rem 1rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .status-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .status-success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+    }
+
+    /* Responsive */
+    @media (max-width: 767px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .hero-description {
+        font-size: 1rem;
+      }
+      
+      .form-footer {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="#" class="logo">
+          <div class="logo-icon">
+            <img src="Img/Transferir(1).png" alt="ENSA Logo" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+          <span class="logo-text">ENSA</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="container">
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-icon">
+          <img src="Img/Transferir(5).png" alt="Ícone de Segurança" style="width: 3rem; height: 3rem;">
+        </div>
+        <h1 class="hero-title">Análise de Vulnerabilidade de Rede</h1>
+        <p class="hero-description">
+          Identifique vulnerabilidades e proteja sua infraestrutura com análises de segurança abrangentes
+        </p>
+      </section>
+
+      <!-- Analysis Types -->
+      <section class="card-grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-subtitle">Análise Básica</div>
+              <div class="card-title">Rápida</div>
+            </div>
+            <div class="card-icon icon-emerald">
+              <img src="Img/Transferir.png" alt="Ícone de Análise Básica" style="width: 1.5rem; height: 1.5rem;">
+            </div>
+          </div>
+          <p class="card-description">Análise rápida de vulnerabilidades comuns</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-subtitle">Análise Completa</div>
+              <div class="card-title">Detalhada</div>
+            </div>
+            <div class="card-icon icon-blue">
+              <img src="Img/Transferir(2).png" alt="Ícone de Análise Completa" style="width: 1.5rem; height: 1.5rem;">
+            </div>
+          </div>
+          <p class="card-description">Avaliação de segurança detalhada e detecção de vulnerabilidades</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-subtitle">Análise Personalizada</div>
+              <div class="card-title">Avançada</div>
+            </div>
+            <div class="card-icon icon-purple">
+              <img src="Img/Transferir(4).png" alt="Ícone de Análise Personalizada" style="width: 1.5rem; height: 1.5rem;">
+            </div>
+          </div>
+          <p class="card-description">Configure parâmetros avançados para uma análise personalizada</p>
+        </div>
+      </section>
+
+      <!-- Configuration Section -->
+      <section class="config-section">
+        <h2 class="section-title">Configurar Nova Análise</h2>
+        <p class="section-description">Escolha o tipo de análise e configure os parâmetros</p>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" style="display: none;"></div>
+
+        <div class="tabs">
+          <div class="tab-list">
+            <button class="tab-trigger active" data-tab="basic">Básica</button>
+            <button class="tab-trigger" data-tab="complete">Completa</button>
+            <button class="tab-trigger" data-tab="custom">Personalizada</button>
+          </div>
+
+          <!-- Basic Tab -->
+          <div class="tab-content active" id="basic-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="ip-basic">Endereço IP</label>
+                <input class="form-input" id="ip-basic" type="text" placeholder="192.168.15.1" value="192.168.15.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="subnet-basic">Máscara de Sub-rede</label>
+                <input class="form-input" id="subnet-basic" type="text" placeholder="255.255.255.0" value="255.255.255.0">
+              </div>
+            </div>
+            <div class="form-footer">
+              <div class="time-estimate">
+                <img src="Img/Transferir(6).png" alt="Ícone de Tempo" style="width: 1rem; height: 1rem;">
+                Tempo estimado: 2-5 minutos
+              </div>
+              <button class="btn btn-primary" id="startBasicScan">Iniciar Análise Básica</button>
+            </div>
+          </div>
+
+          <!-- Complete Tab -->
+          <div class="tab-content" id="complete-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="ip-complete">Endereço IP / Intervalo</label>
+                <input class="form-input" id="ip-complete" type="text" placeholder="192.168.15.0-192.168.15.255">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="depth">Profundidade da Análise</label>
+                <select class="form-select" id="depth">
+                  <option value="">Selecione a profundidade</option>
+                  <option value="standard">Padrão</option>
+                  <option value="aggressive">Agressiva</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-footer">
+              <div class="time-estimate">
+                <img src="Img/Transferir(6).png" alt="Ícone de Tempo" style="width: 1rem; height: 1rem;">
+                Tempo estimado: 15-30 minutos
+              </div>
+              <button class="btn btn-primary">Iniciar Análise Completa</button>
+            </div>
+          </div>
+
+          <!-- Custom Tab -->
+          <div class="tab-content" id="custom-content">
+            <div class="form-grid">
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="ip-custom">Endereço IP / Intervalo</label>
+                  <input class="form-input" id="ip-custom" type="text" placeholder="192.168.15.0-192.168.15.255">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="scan-type">Tipo de Análise</label>
+                  <select class="form-select" id="scan-type">
+                    <option value="">Selecione o tipo</option>
+                    <option value="ports">Portas Específicas</option>
+                    <option value="services">Serviços Específicos</option>
+                    <option value="vulnerabilities">Vulnerabilidades Específicas</option>
+                    <option value="full">Análise Completa Personalizada</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <label class="form-label">Opções Avançadas</label>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <div class="switch-group">
+                    <label class="switch-label">Modo Furtivo</label>
+                    <div class="switch" onclick="toggleSwitch(this)"></div>
+                  </div>
+                  <div class="switch-group">
+                    <label class="switch-label">Análise Agressiva</label>
+                    <div class="switch" onclick="toggleSwitch(this)"></div>
+                  </div>
+                  <div class="switch-group">
+                    <label class="switch-label">Detecção de SO</label>
+                    <div class="switch active" onclick="toggleSwitch(this)"></div>
+                  </div>
+                  <div class="switch-group">
+                    <label class="switch-label">Versão de Serviços</label>
+                    <div class="switch active" onclick="toggleSwitch(this)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-footer">
+              <div class="time-estimate">
+                <img src="Img/Transferir(6).png" alt="Ícone de Tempo" style="width: 1rem; height: 1rem;">
+                Tempo estimado: Variável
+              </div>
+              <button class="btn btn-primary">Iniciar Análise Personalizada</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Configuration
+    const API_BASE_URL = 'http://192.168.15.13:5000';
+    
+    // Tab functionality
+    function initTabs() {
+      const tabTriggers = document.querySelectorAll('.tab-trigger');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+          // Remove active class from all triggers and contents
+          tabTriggers.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+
+          // Add active class to clicked trigger
+          trigger.classList.add('active');
+
+          // Show corresponding content
+          const tabId = trigger.getAttribute('data-tab');
+          document.getElementById(`${tabId}-content`).classList.add('active');
+        });
+      });
+    }
+
+    // Switch functionality
+    function toggleSwitch(element) {
+      element.classList.toggle('active');
+    }
+
+    // Show status message
+    function showStatusMessage(message, type = 'error') {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.textContent = message;
+      statusDiv.style.display = 'block';
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // Validate IP address
+    function isValidIP(ip) {
+      const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      return ipRegex.test(ip);
+    }
+
+    // Adicione esta função de validação de máscara de sub-rede após a função isValidIP
+    function isValidSubnet(subnet) {
+      // Lista de máscaras de sub-rede válidas
+      const validSubnets = [
+        '255.0.0.0',
+        '255.128.0.0',
+        '255.192.0.0',
+        '255.224.0.0',
+        '255.240.0.0',
+        '255.248.0.0',
+        '255.252.0.0',
+        '255.254.0.0',
+        '255.255.0.0',
+        '255.255.128.0',
+        '255.255.192.0',
+        '255.255.224.0',
+        '255.255.240.0',
+        '255.255.248.0',
+        '255.255.252.0',
+        '255.255.254.0',
+        '255.255.255.0',
+        '255.255.255.128',
+        '255.255.255.192',
+        '255.255.255.224',
+        '255.255.255.240',
+        '255.255.255.248',
+        '255.255.255.252'
+      ];
+      
+      return validSubnets.includes(subnet);
+    }
+
+    // Test API connection
+    async function testAPIConnection() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/health`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('API Connection successful:', data);
+          return true;
+        } else {
+          console.error('API Health check failed:', response.status);
+          return false;
+        }
+      } catch (error) {
+        console.error('API Connection failed:', error);
+        return false;
+      }
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      initTabs();
+      
+      // Test API connection on page load
+      testAPIConnection().then(connected => {
+        if (!connected) {
+          showStatusMessage('Não foi possível conectar ao servidor de análise. Verifique se o backend está rodando em 192.168.15.13:5000', 'error');
+        }
+      });
+    });
+    
+    // Modifique o event listener do botão startBasicScan para incluir a validação da máscara de sub-rede
+    document.getElementById('startBasicScan').addEventListener('click', async function(e) {
+      e.preventDefault();
+      
+      const ipAddress = document.getElementById('ip-basic').value.trim();
+      const subnet = document.getElementById('subnet-basic').value.trim();
+      const button = this;
+      
+      // Validation
+      if (!ipAddress) {
+        showStatusMessage('Por favor, insira um endereço IP válido.', 'error');
+        return;
+      }
+      
+      if (!isValidIP(ipAddress)) {
+        showStatusMessage('Por favor, insira um endereço IP válido (ex: 192.168.15.1).', 'error');
+        return;
+      }
+      
+      if (!subnet) {
+        showStatusMessage('Por favor, insira uma máscara de sub-rede válida.', 'error');
+        return;
+      }
+      
+      if (!isValidSubnet(subnet)) {
+        showStatusMessage('Por favor, insira uma máscara de sub-rede válida (ex: 255.255.255.0).', 'error');
+        return;
+      }
+      
+      try {
+        // Disable button and show loading state
+        button.disabled = true;
+        button.textContent = 'Iniciando Análise...';
+        
+        // Test API connection first
+        const apiConnected = await testAPIConnection();
+        if (!apiConnected) {
+          throw new Error('Não foi possível conectar ao servidor de análise');
+        }
+        
+        // Store the scan parameters
+        sessionStorage.setItem('scanIp', ipAddress);
+        sessionStorage.setItem('scanSubnet', subnet);
+        sessionStorage.setItem('scanTimestamp', new Date().toISOString());
+        
+        showStatusMessage('Conectado ao servidor de análise. Redirecionando...', 'success');
+        
+        // Redirect to the results page after a short delay
+        setTimeout(() => {
+          window.location.href = 'scanbasic.html';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Erro ao iniciar a análise:', error);
+        showStatusMessage(`Erro ao iniciar a análise: ${error.message}`, 'error');
+        
+        // Re-enable button
+        button.disabled = false;
+        button.textContent = 'Iniciar Análise Básica';
+      }
+    });
+  </script>
+</body>
+</html>
