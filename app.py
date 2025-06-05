@@ -10,7 +10,7 @@ app = Flask(__name__)
 # Configure CORS more explicitly
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://192.168.15.107", "http://localhost", "http://127.0.0.1"],
+        "origins": ["http://192.168.15.107", "http://localhost", "http://127.0.0.1"],  # IP DO FRONT
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
@@ -148,7 +148,7 @@ def health_check():
     response = jsonify({
         "status": "ok", 
         "message": "ENSA Vulnerability Scanner API is running (SYN SCAN MODE)",
-        "server": "192.168.15.13:5000",
+        "server": "192.168.15.13:5000", #IP DA API
         "nmap_available": nmap_available,
         "nmap_version": nmap_version,
         "scan_mode": "Real nmap -sS scanning" if nmap_available else "Nmap not available",
@@ -160,9 +160,9 @@ def health_check():
 if __name__ == '__main__':
     print("=" * 60)
     print("Starting ENSA Vulnerability Scanner API - SYN SCAN MODE")
-    print("Backend Server IP: 192.168.15.13")
-    print("Frontend Server IP: 192.168.15.107")
-    print("API will be available at: http://192.168.15.13:5000")
+    print("Backend Server IP: 192.168.15.13") #IP DA API
+    print("Frontend Server IP: 192.168.15.107") #IP DO FRONT
+    print("API will be available at: http://192.168.15.13:5000") #IP DA API
     print("=" * 60)
     print("📡 Command executed: nmap -sS <target>")
     print("🎯 100% Real SYN scan - exactly like your original script")
