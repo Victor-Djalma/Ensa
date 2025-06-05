@@ -500,7 +500,7 @@
                 <img src="Img/Transferir(6).png" alt="Ícone de Tempo" style="width: 1rem; height: 1rem;">
                 Tempo estimado: 2-5 minutos
               </div>
-              <button class="btn btn-primary" id="startBasicScan">Iniciar Análise Básica</button>
+              <button class="btn btn-primary" id="btn-basic">Iniciar Análise Básica</button>
             </div>
           </div>
 
@@ -508,9 +508,15 @@
           <div class="tab-content" id="complete-content">
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label" for="ip-complete">Endereço IP / Intervalo</label>
-                <input class="form-input" id="ip-complete" type="text" placeholder="192.168.15.0-192.168.15.255">
+                <label class="form-label" for="ip-complete">Endereço IP</label>
+                <input class="form-input" id="ip-complete" type="text" placeholder="192.168.15.1" value="192.168.15.1">
               </div>
+              <div class="form-group">
+                <label class="form-label" for="subnet-complete">Máscara de Sub-rede</label>
+                <input class="form-input" id="subnet-complete" type="text" placeholder="255.255.255.0" value="255.255.255.0">
+              </div>
+            </div>
+            <div class="form-grid" style="margin-top: 1rem;">
               <div class="form-group">
                 <label class="form-label" for="depth">Profundidade da Análise</label>
                 <select class="form-select" id="depth">
@@ -525,30 +531,34 @@
                 <img src="Img/Transferir(6).png" alt="Ícone de Tempo" style="width: 1rem; height: 1rem;">
                 Tempo estimado: 15-30 minutos
               </div>
-              <button class="btn btn-primary">Iniciar Análise Completa</button>
+              <button class="btn btn-primary" id="btn-complete">Iniciar Análise Completa</button>
             </div>
           </div>
 
           <!-- Custom Tab -->
           <div class="tab-content" id="custom-content">
             <div class="form-grid">
-              <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <div class="form-group">
-                  <label class="form-label" for="ip-custom">Endereço IP / Intervalo</label>
-                  <input class="form-input" id="ip-custom" type="text" placeholder="192.168.15.0-192.168.15.255">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="scan-type">Tipo de Análise</label>
-                  <select class="form-select" id="scan-type">
-                    <option value="">Selecione o tipo</option>
-                    <option value="ports">Portas Específicas</option>
-                    <option value="services">Serviços Específicos</option>
-                    <option value="vulnerabilities">Vulnerabilidades Específicas</option>
-                    <option value="full">Análise Completa Personalizada</option>
-                  </select>
-                </div>
+              <div class="form-group">
+                <label class="form-label" for="ip-custom">Endereço IP</label>
+                <input class="form-input" id="ip-custom" type="text" placeholder="192.168.15.1" value="192.168.15.1">
               </div>
-              <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="subnet-custom">Máscara de Sub-rede</label>
+                <input class="form-input" id="subnet-custom" type="text" placeholder="255.255.255.0" value="255.255.255.0">
+              </div>
+            </div>
+            <div class="form-grid" style="margin-top: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="scan-type">Tipo de Análise</label>
+                <select class="form-select" id="scan-type">
+                  <option value="">Selecione o tipo</option>
+                  <option value="ports">Portas Específicas</option>
+                  <option value="services">Serviços Específicos</option>
+                  <option value="vulnerabilities">Vulnerabilidades Específicas</option>
+                  <option value="full">Análise Completa Personalizada</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label class="form-label">Opções Avançadas</label>
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                   <div class="switch-group">
@@ -575,7 +585,7 @@
                 <img src="Img/Transferir(6).png" alt="Ícone de Tempo" style="width: 1rem; height: 1rem;">
                 Tempo estimado: Variável
               </div>
-              <button class="btn btn-primary">Iniciar Análise Personalizada</button>
+              <button class="btn btn-primary" id="btn-custom">Iniciar Análise Personalizada</button>
             </div>
           </div>
         </div>
@@ -632,9 +642,8 @@
       return ipRegex.test(ip);
     }
 
-    // Adicione esta função de validação de máscara de sub-rede após a função isValidIP
+    // Validate subnet mask
     function isValidSubnet(subnet) {
-      // Lista de máscaras de sub-rede válidas
       const validSubnets = [
         '255.0.0.0',
         '255.128.0.0',
@@ -688,25 +697,13 @@
       }
     }
 
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      initTabs();
+    // Generic scan function
+    async function startScan(scanType, ipFieldId, subnetFieldId, buttonId, redirectPage) {
+      const ipAddress = document.getElementById(ipFieldId).value.trim();
+      const subnet = document.getElementById(subnetFieldId).value.trim();
+      const button = document.getElementById(buttonId);
       
-      // Test API connection on page load
-      testAPIConnection().then(connected => {
-        if (!connected) {
-          showStatusMessage('Não foi possível conectar ao servidor de análise. Verifique se o backend está rodando em 192.168.15.13:5000', 'error');
-        }
-      });
-    });
-    
-    // Modifique o event listener do botão startBasicScan para incluir a validação da máscara de sub-rede
-    document.getElementById('startBasicScan').addEventListener('click', async function(e) {
-      e.preventDefault();
-      
-      const ipAddress = document.getElementById('ip-basic').value.trim();
-      const subnet = document.getElementById('subnet-basic').value.trim();
-      const button = this;
+      console.log(`[DEBUG] Iniciando ${scanType} - IP: ${ipAddress}, Subnet: ${subnet}, Redirect: ${redirectPage}`);
       
       // Validation
       if (!ipAddress) {
@@ -729,9 +726,19 @@
         return;
       }
       
+      // Additional validation for custom scan
+      if (scanType === 'custom') {
+        const scanTypeValue = document.getElementById('scan-type').value;
+        if (!scanTypeValue) {
+          showStatusMessage('Por favor, selecione um tipo de análise.', 'error');
+          return;
+        }
+      }
+      
       try {
         // Disable button and show loading state
         button.disabled = true;
+        const originalText = button.textContent;
         button.textContent = 'Iniciando Análise...';
         
         // Test API connection first
@@ -744,12 +751,30 @@
         sessionStorage.setItem('scanIp', ipAddress);
         sessionStorage.setItem('scanSubnet', subnet);
         sessionStorage.setItem('scanTimestamp', new Date().toISOString());
+        sessionStorage.setItem('scanType', scanType);
+        
+        // Store custom options if it's a custom scan
+        if (scanType === 'custom') {
+          const scanTypeValue = document.getElementById('scan-type').value;
+          const switches = document.querySelectorAll('#custom-content .switch');
+          const customOptions = {
+            stealthMode: switches[0].classList.contains('active'),
+            aggressiveAnalysis: switches[1].classList.contains('active'),
+            osDetection: switches[2].classList.contains('active'),
+            serviceVersion: switches[3].classList.contains('active')
+          };
+          
+          sessionStorage.setItem('customScanType', scanTypeValue);
+          sessionStorage.setItem('customOptions', JSON.stringify(customOptions));
+        }
         
         showStatusMessage('Conectado ao servidor de análise. Redirecionando...', 'success');
         
-        // Redirect to the results page after a short delay
+        console.log(`[DEBUG] Redirecionando para: ${redirectPage}`);
+        
+        // Redirect to the appropriate results page
         setTimeout(() => {
-          window.location.href = 'scanbasic.html';
+          window.location.href = redirectPage;
         }, 1500);
         
       } catch (error) {
@@ -758,8 +783,43 @@
         
         // Re-enable button
         button.disabled = false;
-        button.textContent = 'Iniciar Análise Básica';
+        button.textContent = originalText;
       }
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('[DEBUG] DOM carregado, inicializando...');
+      
+      initTabs();
+      
+      // Test API connection on page load
+      testAPIConnection().then(connected => {
+        if (!connected) {
+          showStatusMessage('Não foi possível conectar ao servidor de análise. Verifique se o backend está rodando em 192.168.15.13:5000', 'error');
+        }
+      });
+
+      // Basic scan event listener
+      document.getElementById('btn-basic').addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('[DEBUG] Botão básico clicado');
+        await startScan('basic', 'ip-basic', 'subnet-basic', 'btn-basic', 'scanbasic.html');
+      });
+
+      // Complete scan event listener
+      document.getElementById('btn-complete').addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('[DEBUG] Botão completo clicado');
+        await startScan('complete', 'ip-complete', 'subnet-complete', 'btn-complete', 'scancomplete.html');
+      });
+
+      // Custom scan event listener
+      document.getElementById('btn-custom').addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('[DEBUG] Botão personalizado clicado');
+        await startScan('custom', 'ip-custom', 'subnet-custom', 'btn-custom', 'scancustom.html');
+      });
     });
   </script>
 </body>
