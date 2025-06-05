@@ -911,33 +911,35 @@
   function showErrorState(errorMessage) {
     const loadingScreen = document.getElementById('loadingScreen');
     const resultsContainer = document.getElementById('resultsContainer');
-    
+  
     loadingScreen.style.display = 'none';
     resultsContainer.style.display = 'block';
-    
+  
     resultsContainer.innerHTML = `
-      <div class="error-state">
-        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <div class="error-title">Erro na Análise</div>
-        <div class="error-message">
-          Não foi possível realizar a análise de vulnerabilidade.<br>
-          <strong>Erro:</strong> ${errorMessage}<br><br>
-          <strong>Verifique se:</strong>
-          <ul style="text-align: left; display: inline-block; margin-top: 0.5rem;">
-            <li>O servidor backend está rodando em 192.168.15.13:5000</li>
-            <li>Não há firewall bloqueando a conexão</li>
-            <li>Os serviços estão configurados corretamente</li>
-            <li>O CORS está habilitado no servidor</li>
-          </ul>
-        </div>
-        <button class="retry-button" onclick="retryAnalysis()">Tentar Novamente</button>
+    <div class="error-state">
+      <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div class="error-title">Erro na Análise Real</div>
+      <div class="error-message">
+        Não foi possível realizar a análise de vulnerabilidade com dados reais.<br>
+        <strong>Erro:</strong> ${errorMessage}<br><br>
+        <strong>Nota:</strong> Este sistema usa apenas dados reais do nmap - sem simulações.<br><br>
+        <strong>Verifique se:</strong>
+        <ul style="text-align: left; display: inline-block; margin-top: 0.5rem;">
+          <li>O nmap está instalado: <code>sudo apt-get install nmap</code></li>
+          <li>Você tem permissões para executar scans de rede</li>
+          <li>O servidor backend está rodando em 192.168.15.13:5000</li>
+          <li>Não há firewall bloqueando a conexão</li>
+          <li>A rede de destino está acessível</li>
+        </ul>
       </div>
-    `;
-  }
+      <button class="retry-button" onclick="retryAnalysis()">Tentar Novamente</button>
+    </div>
+  `;
+}
   
   // Retry analysis
   function retryAnalysis() {
@@ -1077,32 +1079,37 @@
             <div class="status-badge">${host.status}</div>
           </div>
 
-          <div class="host-info-grid">
-            <div class="info-item">
-              <div class="info-label">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-                MAC Address
+          ${(() => {
+            const hostInfoGrid = `
+              <div class="host-info-grid">
+                <div class="info-item">
+                  <div class="info-label">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 20h9"/>
+                      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                    MAC Address
+                  </div>
+                  <div class="info-value">${host.mac || 'N/A'}</div>
+                  ${host.vendor ? `<div class="info-vendor">${host.vendor}</div>` : '<div class="info-vendor">N/A</div>'}
+                </div>
+                ${host.os ? `
+                <div class="info-item">
+                  <div class="info-label">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    Sistema Operacional ${host.os_accuracy ? `(${host.os_accuracy})` : ''}
+                  </div>
+                  <div class="info-value">${host.os}</div>
+                </div>
+                ` : ''}
               </div>
-              <div class="info-value">${host.mac}</div>
-              <div class="info-vendor">${host.vendor}</div>
-            </div>
-            ${host.os ? `
-            <div class="info-item">
-              <div class="info-label">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                  <line x1="8" y1="21" x2="16" y2="21"/>
-                  <line x1="12" y1="17" x2="12" y2="21"/>
-                </svg>
-                Sistema Operacional
-              </div>
-              <div class="info-value">${host.os}</div>
-            </div>
-            ` : ''}
-          </div>
+            `;
+            return hostInfoGrid;
+          })()}
 
           <div class="ports-section">
             <div class="section-title">
