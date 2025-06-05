@@ -1,339 +1,199 @@
 import subprocess
 import json
 import re
-import random
 import time
-import xml.etree.ElementTree as ET
 
 def scan_network(ip_range, use_real_nmap=True):
     """
-    Performs a network scan using nmap.
+    Performs a network scan using exactly: nmap -sS <ip_range>
+    100% REAL DATA - exactly like your original script
     
     Args:
         ip_range: The IP range to scan (e.g., "192.168.15.0/24")
-        use_real_nmap: Whether to use real nmap or generate mock data
+        use_real_nmap: Whether to use real nmap (if False, returns empty results)
         
     Returns:
-        dict: Scan results in a structured format
+        dict: Scan results in a structured format - exactly what nmap -sS returns
     """
-    print(f"[INFO] Starting network scan on {ip_range}")
+    print(f"[INFO] Realizando scan SYN na rede: {ip_range} ...")
     
-    if use_real_nmap:
-        try:
-            # Check if nmap is available
-            subprocess.run(['nmap', '--version'], capture_output=True, check=True)
-            print("[INFO] Using real nmap for scanning")
-            hosts = perform_real_nmap_scan(ip_range)
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"[WARNING] Nmap not available: {e}")
-            print("[INFO] Falling back to mock data")
-            hosts = generate_mock_scan_data(ip_range)
-    else:
-        print("[INFO] Using mock data for demonstration")
-        hosts = generate_mock_scan_data(ip_range)
+    if not use_real_nmap:
+        print("[INFO] Real nmap disabled, returning empty results")
+        return {
+            "scan_range": ip_range,
+            "hosts": [],
+            "scan_time": "0:00",
+            "total_hosts": 0,
+            "total_ports": 0,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "scanner_version": "ENSA v1.0 (Disabled)",
+            "note": "Real scanning disabled"
+        }
+    
+    try:
+        # Check if nmap is available
+        result = subprocess.run(['nmap', '--version'], capture_output=True, check=True)
+        nmap_version = result.stdout.decode().split('\n')[0] if result.stdout else 'Unknown'
+        print(f"[INFO] Nmap detected: {nmap_version}")
+        
+        start_time = time.time()
+        hosts = perform_syn_scan(ip_range)
+        end_time = time.time()
+        
+        # Calculate actual scan time
+        scan_duration = end_time - start_time
+        scan_minutes = int(scan_duration // 60)
+        scan_seconds = int(scan_duration % 60)
+        scan_time = f"{scan_minutes}:{scan_seconds:02d}"
+        
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"[ERROR] Nmap not available: {e}")
+        return {
+            "scan_range": ip_range,
+            "hosts": [],
+            "scan_time": "0:00",
+            "total_hosts": 0,
+            "total_ports": 0,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "scanner_version": "ENSA v1.0 (Error)",
+            "error": "Nmap not installed or not accessible",
+            "note": "Install nmap to perform real network scanning"
+        }
     
     scan_results = {
         "scan_range": ip_range,
         "hosts": hosts,
-        "scan_time": "5:23",
+        "scan_time": scan_time,
         "total_hosts": len(hosts),
         "total_ports": sum(len(host['ports']) for host in hosts),
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "scanner_version": "ENSA v1.0"
+        "scanner_version": f"ENSA v1.0 (Real SYN Scan) - {nmap_version}",
+        "nmap_command_used": f"nmap -sS {ip_range}"
     }
     
-    print(f"[INFO] Scan completed. Found {len(hosts)} hosts with {scan_results['total_ports']} open ports.")
+    print(f"[INFO] SYN scan completed in {scan_time}. Found {len(hosts)} hosts with {scan_results['total_ports']} open ports.")
     return scan_results
 
-def perform_real_nmap_scan(ip_range):
+def perform_syn_scan(ip_range):
     """
-    Perform actual nmap scan
+    Perform exactly: nmap -sS <ip_range>
+    Just like your original script - NO MODIFICATIONS
     """
-    print(f"[INFO] Executing nmap scan on {ip_range}")
+    print(f"[INFO] Executing: nmap -sS {ip_range}")
     
     try:
-        # Basic nmap command for host discovery and port scanning
-        # -sn: Ping scan (host discovery)
-        # -sS: SYN scan (stealth scan)
-        # -sV: Version detection
-        # -O: OS detection (requires root)
-        # --open: Only show open ports
-        # -T4: Aggressive timing
-        # --max-retries 1: Reduce retries for faster scanning
+        # Execute exactly the same command as your script
+        comando = ['nmap', '-sS', ip_range]
+        resultado = subprocess.run(comando, capture_output=True, text=True)
         
-        # First, do host discovery
-        print("[INFO] Phase 1: Host discovery...")
-        discovery_cmd = ['nmap', '-sn', ip_range]
-        discovery_result = subprocess.run(discovery_cmd, capture_output=True, text=True, timeout=120)
-        
-        if discovery_result.returncode != 0:
-            print(f"[ERROR] Host discovery failed: {discovery_result.stderr}")
-            return generate_mock_scan_data(ip_range)
-        
-        # Extract live hosts from discovery
-        live_hosts = extract_live_hosts(discovery_result.stdout)
-        print(f"[INFO] Found {len(live_hosts)} live hosts")
-        
-        if not live_hosts:
-            print("[INFO] No live hosts found, using mock data")
-            return generate_mock_scan_data(ip_range)
-        
-        # Now scan each live host for open ports and services
-        all_hosts = []
-        for i, host_ip in enumerate(live_hosts[:10]):  # Limit to 10 hosts for performance
-            print(f"[INFO] Phase 2: Scanning host {i+1}/{min(len(live_hosts), 10)}: {host_ip}")
+        if resultado.returncode == 0:
+            print("[INFO] Resultado do scan:")
+            print(resultado.stdout)
             
-            # Port scan with service detection
-            port_cmd = [
-                'nmap', '-sS', '-sV', 
-                '--open', 
-                '-T4', 
-                '--max-retries', '1',
-                '--host-timeout', '60s',
-                '-p', '1-1000',  # Scan common ports only for speed
-                host_ip
-            ]
+            # Parse the output to extract host information
+            hosts = parse_syn_scan_output(resultado.stdout)
+            return hosts
+        else:
+            print("[ERROR] Erro ao executar o Nmap:")
+            print(resultado.stderr)
+            return []
             
-            try:
-                port_result = subprocess.run(port_cmd, capture_output=True, text=True, timeout=90)
-                
-                if port_result.returncode == 0:
-                    host_data = parse_nmap_output(port_result.stdout, host_ip)
-                    if host_data:
-                        all_hosts.append(host_data)
-                else:
-                    print(f"[WARNING] Port scan failed for {host_ip}: {port_result.stderr}")
-                    
-            except subprocess.TimeoutExpired:
-                print(f"[WARNING] Port scan timed out for {host_ip}")
-                continue
-            except Exception as e:
-                print(f"[ERROR] Error scanning {host_ip}: {e}")
-                continue
-        
-        if not all_hosts:
-            print("[INFO] No detailed scan results, using mock data")
-            return generate_mock_scan_data(ip_range)
-        
-        return all_hosts
-        
-    except subprocess.TimeoutExpired:
-        print("[ERROR] Nmap scan timed out")
-        return generate_mock_scan_data(ip_range)
     except Exception as e:
-        print(f"[ERROR] Nmap scan error: {str(e)}")
-        return generate_mock_scan_data(ip_range)
+        print(f"[ERROR] Ocorreu um erro: {e}")
+        return []
 
-def extract_live_hosts(nmap_output):
+def parse_syn_scan_output(nmap_output):
     """
-    Extract live host IPs from nmap ping scan output
+    Parse the output from nmap -sS command
+    Extract exactly what nmap returns - nothing more, nothing less
     """
-    live_hosts = []
+    hosts = []
     lines = nmap_output.split('\n')
+    current_host = None
     
     for line in lines:
-        # Look for lines like "Nmap scan report for 192.168.1.1"
-        if 'Nmap scan report for' in line:
-            # Extract IP address
-            ip_match = re.search(r'(\d+\.\d+\.\d+\.\d+)', line)
-            if ip_match:
-                live_hosts.append(ip_match.group(1))
-    
-    return live_hosts
-
-def parse_nmap_output(nmap_output, host_ip):
-    """
-    Parse nmap output and extract host information
-    """
-    try:
-        lines = nmap_output.split('\n')
+        line = line.strip()
         
-        # Initialize host data
-        host_data = {
-            "hostname": f"host-{host_ip.split('.')[-1]}",
-            "ip": host_ip,
-            "mac": "Unknown",
-            "vendor": "Unknown",
-            "status": "online",
-            "ports": [],
-            "os": "Unknown"
-        }
+        # Look for host scan reports
+        if line.startswith('Nmap scan report for'):
+            # Save previous host if exists
+            if current_host and current_host.get('ports'):
+                hosts.append(current_host)
+            
+            # Extract hostname and IP
+            if '(' in line and ')' in line:
+                # Format: "Nmap scan report for hostname (192.168.1.1)"
+                parts = line.split('(')
+                hostname = parts[0].replace('Nmap scan report for', '').strip()
+                ip = parts[1].replace(')', '').strip()
+            else:
+                # Format: "Nmap scan report for 192.168.1.1"
+                target = line.replace('Nmap scan report for', '').strip()
+                if re.match(r'^\d+\.\d+\.\d+\.\d+$', target):
+                    hostname = target
+                    ip = target
+                else:
+                    hostname = target
+                    ip = target
+            
+            current_host = {
+                "hostname": hostname,
+                "ip": ip,
+                "mac": None,
+                "vendor": None,
+                "status": "up",
+                "ports": []
+            }
         
-        # Parse hostname
-        for line in lines:
-            if 'Nmap scan report for' in line and host_ip in line:
-                # Try to extract hostname
-                hostname_match = re.search(r'Nmap scan report for ([^\s]+)', line)
-                if hostname_match and hostname_match.group(1) != host_ip:
-                    host_data["hostname"] = hostname_match.group(1)
-                break
+        # Look for host status
+        elif line.startswith('Host is up'):
+            if current_host:
+                # Extract latency if available
+                latency_match = re.search(r'$$([0-9.]+s)$$', line)
+                if latency_match:
+                    current_host["latency"] = latency_match.group(1)
         
-        # Parse MAC address and vendor
-        for line in lines:
-            if 'MAC Address:' in line:
-                mac_match = re.search(r'MAC Address: ([0-9A-F:]{17})', line)
+        # Look for MAC address
+        elif line.startswith('MAC Address:'):
+            if current_host:
+                mac_match = re.search(r'MAC Address: ([0-9A-F:]{17})', line, re.IGNORECASE)
                 if mac_match:
-                    host_data["mac"] = mac_match.group(1)
+                    current_host["mac"] = mac_match.group(1).upper()
                 
-                # Extract vendor info
-                vendor_match = re.search(r'MAC Address: [0-9A-F:]+ $$([^)]+)$$', line)
+                # Extract vendor
+                vendor_match = re.search(r'MAC Address: [0-9A-F:]+ $$([^)]+)$$', line, re.IGNORECASE)
                 if vendor_match:
-                    host_data["vendor"] = vendor_match.group(1)
-                break
+                    current_host["vendor"] = vendor_match.group(1)
         
-        # Parse open ports
-        in_port_section = False
-        for line in lines:
-            line = line.strip()
-            
-            if 'PORT' in line and 'STATE' in line and 'SERVICE' in line:
-                in_port_section = True
-                continue
-            
-            if in_port_section and line:
-                # Parse port line: "22/tcp   open  ssh     OpenSSH 7.4"
-                port_match = re.match(r'(\d+)/(tcp|udp)\s+(\w+)\s+(\w+)(?:\s+(.+))?', line)
-                if port_match:
-                    port_num = port_match.group(1)
-                    protocol = port_match.group(2)
-                    state = port_match.group(3)
-                    service = port_match.group(4)
-                    version = port_match.group(5) if port_match.group(5) else "Unknown"
+        # Look for port information
+        elif re.match(r'^\d+/(tcp|udp)\s+\w+\s+\w+', line):
+            if current_host:
+                # Parse port line: "22/tcp   open  ssh"
+                parts = line.split()
+                if len(parts) >= 3:
+                    port_protocol = parts[0]
+                    state = parts[1]
+                    service = parts[2] if len(parts) > 2 else "unknown"
                     
-                    if state == 'open':
-                        host_data["ports"].append({
-                            "port": port_num,
-                            "protocol": protocol,
-                            "state": state,
-                            "service": service,
-                            "version": version.strip() if version else "Unknown"
-                        })
-                elif not line or line.startswith('Nmap') or line.startswith('Host'):
-                    in_port_section = False
-        
-        # Parse OS information
-        for line in lines:
-            if 'Running:' in line:
-                os_match = re.search(r'Running: (.+)', line)
-                if os_match:
-                    host_data["os"] = os_match.group(1).strip()
-                    break
-            elif 'OS details:' in line:
-                os_match = re.search(r'OS details: (.+)', line)
-                if os_match:
-                    host_data["os"] = os_match.group(1).strip()
-                    break
-        
-        # Generate MAC if not found
-        if host_data["mac"] == "Unknown":
-            host_data["mac"] = generate_random_mac()
-        
-        return host_data if host_data["ports"] else None
-        
-    except Exception as e:
-        print(f"[ERROR] Error parsing nmap output for {host_ip}: {e}")
-        return None
-
-def generate_random_mac():
-    """Generate a random MAC address"""
-    mac_prefixes = ["00:1B:44", "00:50:56", "B8:27:EB", "52:54:00", "00:0C:29", "08:00:27"]
-    prefix = random.choice(mac_prefixes)
-    suffix = f"{random.randint(10, 99):02X}:{random.randint(10, 99):02X}:{random.randint(10, 99):02X}"
-    return f"{prefix}:{suffix}"
-
-def generate_mock_scan_data(ip_range):
-    """Generate mock scan data for demonstration purposes"""
-    # Extract base IP from range (e.g., "192.168.15" from "192.168.15.0/24")
-    base_ip = ip_range.split('/')[0].rsplit('.', 1)[0]
+                    port_num, protocol = port_protocol.split('/')
+                    
+                    port_data = {
+                        "port": port_num,
+                        "protocol": protocol,
+                        "state": state,
+                        "service": service,
+                        "version": ""  # SYN scan doesn't detect versions
+                    }
+                    current_host["ports"].append(port_data)
     
-    hostnames = ["web-server", "file-server", "app-server", "backup-server", "iot-device", "mail-server", "database-server", "print-server", "router", "switch"]
-    vendors = ["Dell Inc.", "VMware, Inc.", "Raspberry Pi Foundation", "QEMU", "PCS Systemtechnik GmbH", "Intel Corporate", "Hewlett Packard", "Cisco Systems", "Netgear", "TP-Link"]
-    
-    services = {
-        "22": {"name": "ssh", "versions": ["OpenSSH 7.4", "OpenSSH 8.2p1", "OpenSSH 7.9p1", "OpenSSH 8.4p1"]},
-        "80": {"name": "http", "versions": ["Apache httpd 2.4.41", "nginx 1.20.1", "lighttpd 1.4.53", "Microsoft IIS httpd 10.0"]},
-        "443": {"name": "https", "versions": ["Apache httpd 2.4.41", "nginx 1.20.1", "Microsoft IIS httpd 10.0"]},
-        "21": {"name": "ftp", "versions": ["vsftpd 3.0.3", "ProFTPD 1.3.6", "FileZilla Server 0.9.60"]},
-        "25": {"name": "smtp", "versions": ["Postfix smtpd", "Exim smtpd 4.94", "Microsoft ESMTP 10.0"]},
-        "53": {"name": "domain", "versions": ["ISC BIND 9.16.1", "dnsmasq 2.80", "Microsoft DNS 10.0"]},
-        "3306": {"name": "mysql", "versions": ["MySQL 8.0.25", "MariaDB 10.5.9", "MySQL 5.7.34"]},
-        "5432": {"name": "postgresql", "versions": ["PostgreSQL 13.3", "PostgreSQL 12.7"]},
-        "8080": {"name": "http-proxy", "versions": ["Jetty 9.4.43", "Apache Tomcat 9.0.45", "Apache Tomcat 8.5.68"]},
-        "445": {"name": "microsoft-ds", "versions": ["Microsoft Windows Server", "Samba smbd 4.13.2"]},
-        "139": {"name": "netbios-ssn", "versions": ["Microsoft Windows netbios-ssn", "Samba smbd 4.13.2"]},
-        "135": {"name": "msrpc", "versions": ["Microsoft Windows RPC"]},
-        "3389": {"name": "ms-wbt-server", "versions": ["Microsoft Terminal Services"]},
-        "110": {"name": "pop3", "versions": ["Dovecot pop3d", "Microsoft POP3 Service"]},
-        "143": {"name": "imap", "versions": ["Dovecot imapd", "Microsoft Exchange IMAP4"]},
-        "993": {"name": "imaps", "versions": ["Dovecot imapd", "Microsoft Exchange IMAP4"]},
-        "995": {"name": "pop3s", "versions": ["Dovecot pop3d", "Microsoft POP3 Service"]},
-        "23": {"name": "telnet", "versions": ["Linux telnetd", "Windows Telnet Service"]},
-        "161": {"name": "snmp", "versions": ["Net-SNMP 5.8", "Windows SNMP Service"]},
-        "389": {"name": "ldap", "versions": ["OpenLDAP 2.4.44", "Microsoft Active Directory LDAP"]},
-        "636": {"name": "ldaps", "versions": ["OpenLDAP 2.4.44", "Microsoft Active Directory LDAPS"]},
-        "1433": {"name": "ms-sql-s", "versions": ["Microsoft SQL Server 2019", "Microsoft SQL Server 2017"]},
-        "5900": {"name": "vnc", "versions": ["VNC 4.1.3", "TightVNC 2.8.27"]},
-        "6379": {"name": "redis", "versions": ["Redis 6.2.4", "Redis 5.0.12"]},
-        "27017": {"name": "mongod", "versions": ["MongoDB 4.4.6", "MongoDB 3.6.23"]}
-    }
-    
-    hosts = []
-    
-    # Generate 5-12 random hosts
-    num_hosts = random.randint(5, 12)
-    used_ips = set()
-    
-    for i in range(num_hosts):
-        # Generate unique IP in the range
-        while True:
-            host_ip = f"{base_ip}.{random.randint(10, 254)}"
-            if host_ip not in used_ips:
-                used_ips.add(host_ip)
-                break
-        
-        hostname = f"{random.choice(hostnames)}-{str(i+1).zfill(2)}"
-        
-        # Generate MAC address with realistic prefixes
-        mac = generate_random_mac()
-        
-        # Generate open ports (2-8 ports per host)
-        num_ports = random.randint(2, 8)
-        available_ports = list(services.keys())
-        random.shuffle(available_ports)
-        selected_ports = available_ports[:num_ports]
-        
-        ports = []
-        for port in selected_ports:
-            service = services[port]
-            ports.append({
-                "port": port,
-                "protocol": "tcp" if port != "53" else random.choice(["tcp", "udp"]),
-                "state": "open",
-                "service": service["name"],
-                "version": random.choice(service["versions"])
-            })
-        
-        # Sort ports by port number
-        ports.sort(key=lambda x: int(x["port"]))
-        
-        hosts.append({
-            "hostname": hostname,
-            "ip": host_ip,
-            "mac": mac,
-            "vendor": random.choice(vendors),
-            "status": "online",
-            "ports": ports,
-            "os": random.choice(["Linux", "Windows Server 2019", "Windows 10", "Ubuntu 20.04", "CentOS 8", "Unknown"])
-        })
-    
-    # Sort hosts by IP address
-    hosts.sort(key=lambda x: tuple(map(int, x["ip"].split('.'))))
+    # Add the last host if it exists and has ports
+    if current_host and current_host.get('ports'):
+        hosts.append(current_host)
     
     return hosts
 
 if __name__ == "__main__":
-    # Test the scan function
-    test_range = "192.168.15.0/24"
-    print(f"Testing scan function with range: {test_range}")
-    results = scan_network(test_range, use_real_nmap=True)
+    # Test exactly like your original script
+    ip = input("Digite o IP da rede (ex: 192.168.0.0/24): ")
+    results = scan_network(ip, use_real_nmap=True)
     print(json.dumps(results, indent=2))
