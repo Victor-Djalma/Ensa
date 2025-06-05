@@ -16,15 +16,13 @@ CORS(app, resources={
     }
 })
 
-# Modifique a função scan para validar a máscara de sub-rede
 @app.route('/api/scan', methods=['GET', 'OPTIONS'])
 def scan():
     """
-    Endpoint to perform a network scan using nmap
-    Returns scan results as JSON
+    Endpoint to perform exactly: nmap -sS <ip_range>
+    100% like your original script - no modifications
     """
     if request.method == 'OPTIONS':
-        # Handle preflight request
         response = jsonify({'status': 'ok'})
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
@@ -75,45 +73,34 @@ def scan():
         
         ip_range = f"{'.'.join(network)}/{cidr}"
     
-    print(f"[INFO] Received scan request for IP: {ip}, Subnet: {subnet}")
-    print(f"[INFO] Scanning range: {ip_range}")
+    print(f"[INFO] Received SYN scan request for IP: {ip}, Subnet: {subnet}")
+    print(f"[INFO] Will execute: nmap -sS {ip_range}")
     
     try:
         # Check if nmap is available
         import subprocess
         try:
-            subprocess.run(['nmap', '--version'], capture_output=True, check=True)
-            print("[INFO] Nmap is available and ready to use")
+            result = subprocess.run(['nmap', '--version'], capture_output=True, check=True)
+            nmap_version = result.stdout.decode().split('\n')[0] if result.stdout else 'Unknown'
+            print(f"[INFO] Nmap version: {nmap_version}")
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print("[WARNING] Nmap not found! Installing nmap...")
-            # Try to install nmap
-            try:
-                subprocess.run(['apt-get', 'update'], check=True)
-                subprocess.run(['apt-get', 'install', '-y', 'nmap'], check=True)
-                print("[INFO] Nmap installed successfully")
-            except subprocess.CalledProcessError:
-                print("[ERROR] Failed to install nmap. Using mock data instead.")
-                # Fall back to mock data if nmap installation fails
-                scan_results = scan_network.generate_mock_scan_data(ip_range)
-                response = jsonify({
-                    "scan_range": ip_range,
-                    "hosts": scan_results,
-                    "scan_time": "1:45",
-                    "total_hosts": len(scan_results),
-                    "total_ports": sum(len(host['ports']) for host in scan_results),
-                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "scanner_version": "ENSA v1.0 (Mock Mode)",
-                    "note": "Using mock data - nmap not available"
-                })
-                response.headers.add('Access-Control-Allow-Origin', '*')
-                return response
+            print("[ERROR] Nmap not found!")
+            error_response = jsonify({
+                "error": "Nmap not installed or not accessible",
+                "status": "error",
+                "hosts": [],
+                "note": "Please install nmap: sudo apt-get install nmap"
+            })
+            error_response.headers.add('Access-Control-Allow-Origin', '*')
+            return error_response, 500
         
-        print("[INFO] Starting network scan with nmap...")
+        print(f"[INFO] Starting SYN scan: nmap -sS {ip_range}")
         
-        # Perform the scan using nmap
+        # Perform exactly: nmap -sS <ip_range>
         scan_results = scan_network.scan_network(ip_range, use_real_nmap=True)
         
-        print(f"[INFO] Scan completed successfully. Found {len(scan_results.get('hosts', []))} hosts")
+        print(f"[INFO] SYN scan completed successfully.")
+        print(f"[INFO] Found {len(scan_results.get('hosts', []))} hosts with {scan_results.get('total_ports', 0)} total open ports")
         
         # Add CORS headers to response
         response = jsonify(scan_results)
@@ -121,32 +108,17 @@ def scan():
         return response
         
     except Exception as e:
-        print(f"[ERROR] Scan failed: {str(e)}")
+        print(f"[ERROR] SYN scan failed: {str(e)}")
         
-        # If real scan fails, provide mock data as fallback
-        print("[INFO] Falling back to mock data due to error")
-        try:
-            mock_hosts = scan_network.generate_mock_scan_data(ip_range)
-            fallback_response = jsonify({
-                "scan_range": ip_range,
-                "hosts": mock_hosts,
-                "scan_time": "1:45",
-                "total_hosts": len(mock_hosts),
-                "total_ports": sum(len(host['ports']) for host in mock_hosts),
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "scanner_version": "ENSA v1.0 (Fallback Mode)",
-                "error": f"Real scan failed: {str(e)}",
-                "note": "Using mock data as fallback"
-            })
-            fallback_response.headers.add('Access-Control-Allow-Origin', '*')
-            return fallback_response
-        except Exception as fallback_error:
-            error_response = jsonify({
-                "error": f"Scan failed: {str(e)}, Fallback failed: {str(fallback_error)}", 
-                "status": "error"
-            })
-            error_response.headers.add('Access-Control-Allow-Origin', '*')
-            return error_response, 500
+        error_response = jsonify({
+            "error": f"SYN scan failed: {str(e)}", 
+            "status": "error",
+            "hosts": [],
+            "scan_range": ip_range,
+            "note": "Only real nmap -sS data is returned"
+        })
+        error_response.headers.add('Access-Control-Allow-Origin', '*')
+        return error_response, 500
 
 @app.route('/api/health', methods=['GET', 'OPTIONS'])
 def health_check():
@@ -175,51 +147,38 @@ def health_check():
     
     response = jsonify({
         "status": "ok", 
-        "message": "ENSA Vulnerability Scanner API is running",
+        "message": "ENSA Vulnerability Scanner API is running (SYN SCAN MODE)",
         "server": "192.168.15.13:5000",
         "nmap_available": nmap_available,
         "nmap_version": nmap_version,
-        "scan_mode": "Real nmap scanning" if nmap_available else "Mock data mode"
-    })
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
-
-@app.route('/api/scan/status', methods=['GET', 'OPTIONS'])
-def scan_status():
-    """
-    Get scan status - for future implementation of real-time updates
-    """
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-        return response
-    
-    response = jsonify({
-        "status": "scanning",
-        "progress": 75,
-        "message": "Analisando hosts na rede com nmap..."
+        "scan_mode": "Real nmap -sS scanning" if nmap_available else "Nmap not available",
+        "command": "nmap -sS <target>"
     })
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("Starting ENSA Vulnerability Scanner API...")
+    print("Starting ENSA Vulnerability Scanner API - SYN SCAN MODE")
     print("Backend Server IP: 192.168.15.13")
     print("Frontend Server IP: 192.168.15.107")
     print("API will be available at: http://192.168.15.13:5000")
+    print("=" * 60)
+    print("📡 Command executed: nmap -sS <target>")
+    print("🎯 100% Real SYN scan - exactly like your original script")
+    print("⚡ Fast and efficient - only SYN packets")
     print("=" * 60)
     
     # Check nmap availability on startup
     try:
         import subprocess
         result = subprocess.run(['nmap', '--version'], capture_output=True, text=True, check=True)
-        print(f"[INFO] Nmap detected: {result.stdout.split()[1] if result.stdout else 'Unknown version'}")
-        print("[INFO] Real network scanning enabled")
+        nmap_version = result.stdout.split('\n')[0] if result.stdout else 'Unknown'
+        print(f"[INFO] Nmap detected: {nmap_version}")
+        print("[INFO] Real SYN scanning enabled")
+        print("[INFO] Command: nmap -sS <target>")
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("[WARNING] Nmap not found! Scanner will use mock data.")
+        print("[ERROR] Nmap not found! Scanner will not work.")
         print("[INFO] To install nmap: sudo apt-get install nmap")
     
     print("=" * 60)
