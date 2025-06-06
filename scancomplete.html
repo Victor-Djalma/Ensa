@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ENSA - Dashboard de Vulnerabilidades Completo</title>
-<link rel="icon" href="Img/Transferir(1).png" type="image/png">
+<link rel="icon" href="/placeholder.svg?height=32&width=32" type="image/svg+xml">
 
 <style>
   * {
@@ -590,6 +590,8 @@
     color: #94a3b8;
     max-width: 300px;
     z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
   }
 
   .debug-toggle {
@@ -830,13 +832,15 @@
 <!-- Header -->
 <header class="header">
   <div class="header-content">
-    <a href="index.html" class="logo">
+    <a href="#" class="logo">
       <div class="logo-icon">
-        <img src="Img/Transferir(1).png" alt="ENSA Logo" style="width: 100%; height: 100%; object-fit: contain;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 100%; height: 100%;">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
       </div>
       <span class="logo-text">ENSA</span>
     </a>
-    <a href="index.html" class="back-button">← Voltar</a>
+    <a href="#" class="back-button">← Voltar</a>
   </div>
 </header>
 
@@ -913,19 +917,9 @@
   <div id="debugContent">Carregando...</div>
 </div>
 
-<!-- Print Report Template (hidden) -->
-<div id="reportTemplate" style="display: none;">
-  <div class="report-header">
-    <div class="report-title">Relatório de Vulnerabilidades ENSA</div>
-    <div class="report-subtitle">Análise Completa de Segurança</div>
-    <div class="report-date" id="reportDate"></div>
-  </div>
-  <div id="reportContent"></div>
-</div>
-
 <script>
   // Configuration
-  const API_BASE_URL = 'http://192.168.15.13:5000'; //IP DA API
+  const API_BASE_URL = 'http://172.16.43.197:5000'; //IP DA API
   let debugMode = false;
   let scanStartTime = null;
   let scanResults = null;
@@ -1123,7 +1117,7 @@
         <ul style="text-align: left; display: inline-block; margin-top: 0.5rem;">
           <li>O nmap está instalado: <code>sudo apt-get install nmap</code></li>
           <li>Você tem permissões para executar scans de rede</li>
-          <li>O servidor backend está rodando em 192.168.15.13:5000</li> //IP DA API
+          <li>O servidor backend está rodando em 172.16.43.197:5000</li>
           <li>Não há firewall bloqueando a conexão</li>
           <li>A rede de destino está acessível</li>
         </ul>
@@ -1288,37 +1282,32 @@
             <div class="status-badge">${host.status}</div>
           </div>
 
-          ${(() => {
-            const hostInfoGrid = `
-              <div class="host-info-grid">
-                <div class="info-item">
-                  <div class="info-label">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 20h9"/>
-                      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                    </svg>
-                    MAC Address
-                  </div>
-                  <div class="info-value">${host.mac || 'N/A'}</div>
-                  ${host.vendor ? `<div class="info-vendor">${host.vendor}</div>` : '<div class="info-vendor">N/A</div>'}
-                </div>
-                ${host.os ? `
-                <div class="info-item">
-                  <div class="info-label">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                      <line x1="8" y1="21" x2="16" y2="21"/>
-                      <line x1="12" y1="17" x2="12" y2="21"/>
-                    </svg>
-                    Sistema Operacional ${host.os_accuracy ? `(${host.os_accuracy})` : ''}
-                  </div>
-                  <div class="info-value">${host.os}</div>
-                </div>
-                ` : ''}
+          <div class="host-info-grid">
+            <div class="info-item">
+              <div class="info-label">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                MAC Address
               </div>
-            `;
-            return hostInfoGrid;
-          })()}
+              <div class="info-value">${host.mac || 'N/A'}</div>
+              <div class="info-vendor">${host.vendor || 'N/A'}</div>
+            </div>
+            ${host.os ? `
+            <div class="info-item">
+              <div class="info-label">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Sistema Operacional ${host.os_accuracy ? `(${host.os_accuracy})` : ''}
+              </div>
+              <div class="info-value">${host.os}</div>
+            </div>
+            ` : ''}
+          </div>
 
           <div class="ports-section">
             <div class="section-title">
@@ -1512,7 +1501,7 @@
     updateDebug(`Filtros aplicados: ${visibleCount} hosts visíveis`);
   }
 
-  // Print CVE report
+  // Print CVE report - FIXED FUNCTION
   function printCVEReport() {
     updateDebug('Gerando relatório de CVEs para impressão');
     
@@ -1527,10 +1516,6 @@
       alert('Por favor, permita popups para imprimir o relatório.');
       return;
     }
-    
-    // Get the report template
-    const reportTemplate = document.getElementById('reportTemplate');
-    const reportDate = document.getElementById('reportDate');
     
     // Set the current date
     const currentDate = new Date().toLocaleDateString('pt-BR', {
@@ -1649,7 +1634,7 @@
       
       <div class="report-summary">
         <div class="summary-title">Resumo da Análise</div>
-        <div class="summary-item"><strong>Rede analisada:</strong> ${scanResults.scan_range}</div>
+        <div class="summary-item"><strong>Rede analisada:</strong> ${scanResults.scan_range || 'N/A'}</div>
         <div class="summary-item"><strong>Hosts detectados:</strong> ${scanResults.hosts.length}</div>
         <div class="summary-item"><strong>Portas abertas:</strong> ${scanResults.total_ports || scanResults.hosts.reduce((sum, host) => sum + host.ports.length, 0)}</div>
         <div class="summary-item"><strong>Tempo de análise:</strong> ${calculateScanTime()}</div>
@@ -1666,4 +1651,147 @@
       // Generate mock CVEs for this host
       const mockCVEs = generateMockCVEs(host);
       totalCVEs += mockCVEs.length;
-      criticalCVEs += mockCVEs.filter(cve => cve.severity === 'Critical').
+      criticalCVEs += mockCVEs.filter(cve => cve.severity === 'Critical').length;
+      highCVEs += mockCVEs.filter(cve => cve.severity === 'High').length;
+      
+      if (mockCVEs.length > 0) {
+        reportContent += `
+          <div class="host-section">
+            <div class="host-title">${host.hostname} (${host.ip})</div>
+            <div class="host-info">
+              <div class="host-info-item"><strong>MAC:</strong> ${host.mac || 'N/A'}</div>
+              <div class="host-info-item"><strong>Vendor:</strong> ${host.vendor || 'N/A'}</div>
+              ${host.os ? `<div class="host-info-item"><strong>OS:</strong> ${host.os}</div>` : ''}
+              <div class="host-info-item"><strong>Status:</strong> ${host.status}</div>
+              <div class="host-info-item"><strong>Portas abertas:</strong> ${host.ports.length}</div>
+            </div>
+            
+            <table class="cve-table">
+              <thead>
+                <tr>
+                  <th>CVE ID</th>
+                  <th>Severidade</th>
+                  <th>CVSS</th>
+                  <th>Serviço</th>
+                  <th>Descrição</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${mockCVEs.map(cve => `
+                  <tr>
+                    <td>${cve.id}</td>
+                    <td class="severity-${cve.severity.toLowerCase()}">${cve.severity}</td>
+                    <td>${cve.cvss}</td>
+                    <td>${cve.service}</td>
+                    <td>${cve.description}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    });
+    
+    // Add summary statistics
+    reportContent += `
+      <div class="report-summary">
+        <div class="summary-title">Estatísticas de Vulnerabilidades</div>
+        <div class="summary-item"><strong>Total de CVEs encontradas:</strong> ${totalCVEs}</div>
+        <div class="summary-item"><strong>Vulnerabilidades críticas:</strong> <span class="severity-critical">${criticalCVEs}</span></div>
+        <div class="summary-item"><strong>Vulnerabilidades altas:</strong> <span class="severity-high">${highCVEs}</span></div>
+      </div>
+      
+      <div class="footer">
+        <p>Relatório gerado pelo ENSA - Sistema de Análise de Vulnerabilidades</p>
+        <p>Este relatório contém dados simulados para fins de demonstração</p>
+      </div>
+    `;
+    
+    // Write content to print window
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Relatório de CVEs - ENSA</title>
+        <meta charset="UTF-8">
+      </head>
+      <body>
+        ${reportContent}
+      </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+    
+    updateDebug('Relatório de CVEs gerado com sucesso');
+  }
+
+  // Initialize the application
+  function init() {
+    updateDebug('Aplicação iniciada');
+    
+    // Check if we have scan parameters
+    const hasParams = sessionStorage.getItem('scanIp') || sessionStorage.getItem('scanSubnet');
+    
+    if (hasParams) {
+      // Start the scan
+      fetchScanResults();
+    } else {
+      // For demo purposes, create mock data
+      updateDebug('Criando dados de demonstração');
+      setTimeout(() => {
+        const mockData = {
+          scan_range: '192.168.1.0/24',
+          total_ports: 15,
+          timestamp: new Date().toISOString(),
+          hosts: [
+            {
+              hostname: 'router.local',
+              ip: '192.168.1.1',
+              mac: '00:11:22:33:44:55',
+              vendor: 'TP-Link',
+              status: 'up',
+              os: 'Linux 3.x',
+              os_accuracy: '95%',
+              ports: [
+                { port: '22', protocol: 'tcp', state: 'open', service: 'ssh', version: 'OpenSSH 7.4' },
+                { port: '80', protocol: 'tcp', state: 'open', service: 'http', version: 'nginx 1.14.0' },
+                { port: '443', protocol: 'tcp', state: 'open', service: 'https', version: 'nginx 1.14.0' }
+              ]
+            },
+            {
+              hostname: 'desktop-pc',
+              ip: '192.168.1.100',
+              mac: '00:AA:BB:CC:DD:EE',
+              vendor: 'Dell Inc.',
+              status: 'up',
+              os: 'Windows 10',
+              os_accuracy: '90%',
+              ports: [
+                { port: '135', protocol: 'tcp', state: 'open', service: 'msrpc', version: 'Microsoft Windows RPC' },
+                { port: '445', protocol: 'tcp', state: 'open', service: 'microsoft-ds', version: 'Windows 10' },
+                { port: '3389', protocol: 'tcp', state: 'open', service: 'ms-wbt-server', version: 'Microsoft Terminal Services' }
+              ]
+            }
+          ]
+        };
+        
+        scanResults = mockData;
+        displayScanResults(mockData);
+      }, 8000);
+      
+      simulateLoadingProgress();
+    }
+  }
+
+  // Start the application when page loads
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
